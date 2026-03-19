@@ -149,7 +149,8 @@ export async function getOpenClawBin(): Promise<string> {
 
   // 2. which
   try {
-    const { stdout } = await exec("which", ["openclaw"], { timeout: 3000 });
+    const whichCmd = process.platform === "win32" ? "where" : "which";
+    const { stdout } = await exec(whichCmd, ["openclaw"], { timeout: 3000 });
     const resolved = stdout.trim();
     if (resolved) {
       _bin = resolved;

@@ -7,6 +7,10 @@ const exec = promisify(execFile);
 /** Env vars for all CLI subprocesses. Mission Control is always a trusted local process. */
 const CLI_ENV = { ...process.env, NO_COLOR: "1", OPENCLAW_ALLOW_INSECURE_PRIVATE_WS: "1" };
 
+/** On Windows, .cmd/.bat wrappers require shell:true for child_process to spawn them. */
+const IS_WIN = process.platform === "win32";
+const SPAWN_OPTS = IS_WIN ? { shell: true } : {};
+
 // ── Concurrency semaphore ──────────────────────────────────────────────────
 // Caps the number of simultaneously live CLI subprocesses. Callers that
 // exceed the limit are queued and resume in FIFO order as slots free up.
@@ -95,6 +99,7 @@ export async function runCli(
           env: CLI_ENV,
           timeout,
           stdio: ["pipe", "pipe", "pipe"],
+          ...SPAWN_OPTS,
         });
         let stdout = "";
         let stderr = "";
@@ -112,6 +117,7 @@ export async function runCli(
     const { stdout } = await exec(bin, args, {
       timeout,
       env: CLI_ENV,
+      ...SPAWN_OPTS,
     });
     return stdout;
   } finally {
